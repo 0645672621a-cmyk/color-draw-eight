@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#f4f0e8">
-  <meta name="description" content="从红、橙、黄、绿、蓝、紫、黑、白中随机抽取一种颜色，同一轮不会重复。">
+  <meta name="description" content="从红、橙、黄、绿、蓝、紫、黑、白、粉、棕、金、银、肉色中随机抽取一种颜色，同一轮不会重复。">
   <title>随机抽颜色</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%2320232a'/%3E%3Ccircle cx='32' cy='32' r='17' fill='none' stroke='%23fff' stroke-width='4'/%3E%3Ccircle cx='32' cy='32' r='6' fill='%23ffd84a'/%3E%3C/svg%3E">
   <style>
@@ -263,15 +263,15 @@
   <div class="app" id="app">
     <header class="topbar">
       <div>
-        <p class="eyebrow">COLOR DRAW · 01—08</p>
+        <p class="eyebrow">COLOR DRAW · 01—13</p>
         <h1>随机抽颜色</h1>
       </div>
-      <div class="counter" id="counter" aria-live="polite">剩余 8 / 8</div>
+      <div class="counter" id="counter" aria-live="polite">剩余 13 / 13</div>
     </header>
 
     <main>
       <section class="stage" aria-labelledby="resultName">
-        <p class="caption" id="caption">八种颜色 · 每种只会出现一次</p>
+        <p class="caption" id="caption">13种颜色 · 每种只会出现一次</p>
         <div class="color-orb" aria-hidden="true">
           <span class="color-char" id="colorChar">?</span>
         </div>
@@ -285,7 +285,7 @@
     <section class="history" aria-labelledby="historyTitle">
       <div class="history-head">
         <span id="historyTitle">抽取记录</span>
-        <span class="history-count" id="historyCount">0 / 8</span>
+        <span class="history-count" id="historyCount">0 / 13</span>
       </div>
       <div class="chips" id="chips">
         <p class="empty-note">抽到的颜色会依次出现在这里</p>
@@ -303,7 +303,12 @@
         { id: 'blue', name: '蓝', label: '蓝色', hex: '#3478DE', light: false },
         { id: 'purple', name: '紫', label: '紫色', hex: '#8056C9', light: false },
         { id: 'black', name: '黑', label: '黑色', hex: '#20232A', light: false },
-        { id: 'white', name: '白', label: '白色', hex: '#FFFFFF', light: true }
+        { id: 'white', name: '白', label: '白色', hex: '#FFFFFF', light: true },
+        { id: 'pink', name: '粉', label: '粉色', hex: '#EC69AE', light: true },
+        { id: 'brown', name: '棕', label: '棕色', hex: '#795037', light: false },
+        { id: 'gold', name: '金', label: '金色', hex: '#C49A32', light: true },
+        { id: 'silver', name: '银', label: '银色', hex: '#A8B4C2', light: true },
+        { id: 'skin', name: '肉', label: '肉色', hex: '#DDB69A', light: true }
       ];
       const STORAGE_KEY = 'color-draw-selected-v2';
       const $ = (id) => document.getElementById(id);
@@ -366,7 +371,7 @@
         ui.colorChar.textContent = current?.name || '?';
         ui.resultName.textContent = current?.label || '下一种，会是什么颜色？';
         ui.colorCode.innerHTML = current ? current.hex : '&nbsp;';
-        ui.caption.textContent = finished ? '八种颜色已全部抽完' : current ? '这一次抽到' : '八种颜色 · 每种只会出现一次';
+        ui.caption.textContent = finished ? '13种颜色已全部抽完' : current ? '这一次抽到' : '13种颜色 · 每种只会出现一次';
         ui.draw.textContent = finished ? '重新开始' : current ? '继续抽取' : '开始抽取';
         ui.reset.classList.toggle('visible', Boolean(current) && !finished);
 
@@ -445,7 +450,7 @@
           void Promise.resolve(context.registerTool({
             name: 'reset_color_draw',
             title: '重新开始抽颜色',
-            description: '清空当前一轮已经抽到的颜色，恢复全部八种颜色。',
+            description: '清空当前一轮已经抽到的颜色，恢复全部13种颜色。',
             inputSchema: { type: 'object', properties: {}, additionalProperties: false },
             annotations: { readOnlyHint: false, untrustedContentHint: false },
             execute(input) {
