@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#f4f0e8">
-  <meta name="description" content="从红、橙、黄、绿、蓝、紫、黑、白、粉、棕、金、银、肉色中随机抽取一种颜色，同一轮不会重复。">
-  <title>随机抽颜色</title>
+  <meta name="description" content="为旅行照片抽取一个观察主题：颜色、画面图案、旅途中的人、取景方式、形状与数字。各主题单独记录，抽过的卡不会重复。">
+  <title>旅行观察抽卡</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%2320232a'/%3E%3Ccircle cx='32' cy='32' r='17' fill='none' stroke='%23fff' stroke-width='4'/%3E%3Ccircle cx='32' cy='32' r='6' fill='%23ffd84a'/%3E%3C/svg%3E">
   <style>
     :root {
@@ -17,6 +17,7 @@
       --button-bg: #20232a;
       --button-ink: #fff;
       --shadow: 0 18px 50px rgba(20, 20, 20, .16);
+      --surface: rgba(255, 255, 255, .38);
     }
 
     * { box-sizing: border-box; }
@@ -40,8 +41,8 @@
       margin: 0 auto;
       padding: max(24px, env(safe-area-inset-top)) clamp(20px, 5vw, 56px) max(24px, env(safe-area-inset-bottom));
       display: grid;
-      grid-template-rows: auto 1fr auto;
-      gap: 24px;
+      grid-template-rows: auto auto 1fr auto;
+      gap: clamp(18px, 3vw, 26px);
     }
 
     .topbar, .history-head {
@@ -75,8 +76,64 @@
       font-weight: 700;
     }
 
+    .theme-picker { min-width: 0; }
+
+    .picker-label {
+      margin: 0 0 10px;
+      color: var(--muted);
+      font-size: .78rem;
+      font-weight: 720;
+      letter-spacing: .09em;
+    }
+
+    .theme-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .theme-option {
+      min-width: 0;
+      min-height: 66px;
+      padding: 9px 12px;
+      border: 1px solid var(--line);
+      border-radius: 17px;
+      background: transparent;
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-align: left;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .theme-option[aria-pressed="true"] {
+      border: 2px solid var(--ink);
+      padding: 8px 11px;
+      background: var(--surface);
+    }
+
+    .theme-option:focus-visible, .draw-button:focus-visible, .reset:focus-visible {
+      outline: 3px solid currentColor;
+      outline-offset: 3px;
+    }
+
+    .theme-icon {
+      flex: none;
+      width: 35px;
+      height: 35px;
+      display: grid;
+      place-items: center;
+    }
+
+    .theme-icon svg { width: 35px; height: 35px; }
+    .theme-copy { min-width: 0; }
+    .theme-name { display: block; font-size: .9rem; font-weight: 760; white-space: nowrap; }
+    .theme-progress { display: block; margin-top: 2px; color: var(--muted); font-size: .72rem; white-space: nowrap; }
+
     main {
-      min-height: 470px;
+      min-height: 360px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -98,19 +155,20 @@
       letter-spacing: .08em;
     }
 
-    .color-orb {
-      width: clamp(210px, 42vw, 320px);
+    .card-art {
+      width: clamp(188px, 39vw, 288px);
       aspect-ratio: 1;
-      margin: clamp(24px, 5vh, 42px) 0 22px;
+      margin: clamp(16px, 3vh, 30px) 0 20px;
       border: 2px solid var(--line);
       border-radius: 50%;
       display: grid;
       place-items: center;
       position: relative;
+      background: var(--surface);
       transition: transform 320ms cubic-bezier(.2,.8,.2,1), border-color 260ms ease;
     }
 
-    .color-orb::after {
+    .card-art::after {
       content: "";
       position: absolute;
       inset: 10px;
@@ -119,14 +177,20 @@
       opacity: .55;
     }
 
-    .color-char {
+    .card-art .symbol-svg {
       position: relative;
       z-index: 1;
-      font-size: clamp(7rem, 23vw, 11rem);
-      font-weight: 760;
+      width: 72%;
+      height: 72%;
+      overflow: visible;
+    }
+
+    .placeholder {
+      position: relative;
+      z-index: 1;
+      font-size: clamp(6rem, 20vw, 9rem);
+      font-weight: 650;
       line-height: 1;
-      letter-spacing: -.08em;
-      transform: translateX(-.04em);
     }
 
     .color-name {
@@ -135,13 +199,13 @@
       font-weight: 760;
     }
 
-    .color-code {
+    .card-note {
       min-height: 1.5em;
       margin: 6px 0 0;
       color: var(--muted);
-      font-size: .82rem;
-      font-weight: 650;
-      letter-spacing: .14em;
+      font-size: .9rem;
+      line-height: 1.5;
+      max-width: 25em;
     }
 
     .draw-button {
@@ -164,7 +228,6 @@
 
     .draw-button:hover { transform: translateY(-2px); }
     .draw-button:active { transform: scale(.98); }
-    .draw-button:focus-visible, .reset:focus-visible { outline: 3px solid currentColor; outline-offset: 4px; }
 
     .reset {
       min-height: 44px;
@@ -220,6 +283,8 @@
       border-radius: 50%;
     }
 
+    .chip-symbol, .chip-symbol svg { width: 18px; height: 18px; display: inline-block; }
+
     .empty-note {
       margin: 0;
       align-self: center;
@@ -227,7 +292,7 @@
       font-size: .87rem;
     }
 
-    .pop .color-orb { animation: result-pop 420ms cubic-bezier(.18,.9,.32,1.25); }
+    .pop .card-art { animation: result-pop 420ms cubic-bezier(.18,.9,.32,1.25); }
 
     @keyframes result-pop {
       0% { transform: scale(.78); opacity: .3; }
@@ -241,15 +306,21 @@
 
     @media (min-width: 760px) {
       .app { padding-top: 42px; padding-bottom: 36px; }
-      main { min-height: 560px; }
+      .theme-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      main { min-height: 440px; }
       .chips { max-width: 720px; }
+    }
+
+    @media (max-width: 390px) {
+      .theme-option { min-height: 58px; }
+      main { min-height: 325px; }
     }
 
     @media (max-height: 720px) {
       .app { gap: 14px; padding-top: 18px; padding-bottom: 18px; }
-      main { min-height: 390px; }
-      .color-orb { width: 190px; margin: 18px 0 14px; }
-      .color-char { font-size: 6.5rem; }
+      main { min-height: 310px; }
+      .card-art { width: 175px; margin: 14px 0 12px; }
+      .placeholder { font-size: 6rem; }
       .draw-button { margin-top: 24px; min-height: 54px; }
       .history { padding-top: 15px; }
     }
@@ -263,20 +334,25 @@
   <div class="app" id="app">
     <header class="topbar">
       <div>
-        <p class="eyebrow">COLOR DRAW · 01—13</p>
-        <h1>随机抽颜色</h1>
+        <p class="eyebrow">PHOTO PROMPT · 06 THEMES</p>
+        <h1>旅行观察抽卡</h1>
       </div>
       <div class="counter" id="counter" aria-live="polite">剩余 13 / 13</div>
     </header>
 
+    <section class="theme-picker" aria-labelledby="pickerTitle">
+      <h2 class="picker-label" id="pickerTitle">选择今天的观察主题</h2>
+      <div class="theme-grid" id="themeGrid" role="group" aria-label="选择拍照主题"></div>
+    </section>
+
     <main>
       <section class="stage" aria-labelledby="resultName">
-        <p class="caption" id="caption">13种颜色 · 每种只会出现一次</p>
-        <div class="color-orb" aria-hidden="true">
-          <span class="color-char" id="colorChar">?</span>
+        <p class="caption" id="caption">颜色 · 每张卡只出现一次</p>
+        <div class="card-art" id="cardArt" aria-hidden="true">
+          <span class="placeholder">?</span>
         </div>
-        <h2 class="color-name" id="resultName">下一种，会是什么颜色？</h2>
-        <p class="color-code" id="colorCode">&nbsp;</p>
+        <h2 class="color-name" id="resultName">下一张，会是什么？</h2>
+        <p class="card-note" id="cardNote">带着一张卡，去发现旅途中的美</p>
         <button class="draw-button" id="drawButton" type="button">开始抽取</button>
         <button class="reset" id="resetButton" type="button">重新开始</button>
       </section>
@@ -284,7 +360,7 @@
 
     <section class="history" aria-labelledby="historyTitle">
       <div class="history-head">
-        <span id="historyTitle">抽取记录</span>
+        <span id="historyTitle">颜色 · 抽取记录</span>
         <span class="history-count" id="historyCount">0 / 13</span>
       </div>
       <div class="chips" id="chips">
@@ -296,42 +372,111 @@
   <script>
     (() => {
       const COLORS = [
-        { id: 'red', name: '红', label: '红色', hex: '#E6434B', light: false },
-        { id: 'orange', name: '橙', label: '橙色', hex: '#FF9F43', light: true },
-        { id: 'yellow', name: '黄', label: '黄色', hex: '#FFD84A', light: true },
-        { id: 'green', name: '绿', label: '绿色', hex: '#36A779', light: false },
-        { id: 'blue', name: '蓝', label: '蓝色', hex: '#3478DE', light: false },
-        { id: 'purple', name: '紫', label: '紫色', hex: '#8056C9', light: false },
-        { id: 'black', name: '黑', label: '黑色', hex: '#20232A', light: false },
-        { id: 'white', name: '白', label: '白色', hex: '#FFFFFF', light: true },
-        { id: 'pink', name: '粉', label: '粉色', hex: '#EC69AE', light: true },
-        { id: 'brown', name: '棕', label: '棕色', hex: '#795037', light: false },
-        { id: 'gold', name: '金', label: '金色', hex: '#C49A32', light: true },
-        { id: 'silver', name: '银', label: '银色', hex: '#A8B4C2', light: true },
-        { id: 'skin', name: '肉', label: '肉色', hex: '#DDB69A', light: true }
+        { id: 'red', label: '红色', name: '红', hex: '#E6434B', light: false },
+        { id: 'orange', label: '橙色', name: '橙', hex: '#FF9F43', light: true },
+        { id: 'yellow', label: '黄色', name: '黄', hex: '#FFD84A', light: true },
+        { id: 'green', label: '绿色', name: '绿', hex: '#36A779', light: false },
+        { id: 'blue', label: '蓝色', name: '蓝', hex: '#3478DE', light: false },
+        { id: 'purple', label: '紫色', name: '紫', hex: '#8056C9', light: false },
+        { id: 'black', label: '黑色', name: '黑', hex: '#20232A', light: false },
+        { id: 'white', label: '白色', name: '白', hex: '#FFFFFF', light: true },
+        { id: 'pink', label: '粉色', name: '粉', hex: '#EC69AE', light: true },
+        { id: 'brown', label: '棕色', name: '棕', hex: '#795037', light: false },
+        { id: 'gold', label: '金色', name: '金', hex: '#C49A32', light: true },
+        { id: 'silver', label: '银色', name: '银', hex: '#A8B4C2', light: true },
+        { id: 'skin', label: '肉色', name: '肉', hex: '#DDB69A', light: true }
       ];
-      const STORAGE_KEY = 'color-draw-selected-v2';
+
+      const THEMES = {
+        colors: {
+          name: '颜色', intro: '13种颜色 · 每张卡只出现一次', cards: COLORS
+        },
+        patterns: {
+          name: '画面图案', intro: '在街头和自然里寻找有趣的图案', cards: [
+            { id: 'grid', label: '网格', tip: '找一处交错成格的线条' },
+            { id: 'dots', label: '波点', tip: '发现散落或排列的小圆点' },
+            { id: 'stripes', label: '条纹', tip: '让一道道条纹成为画面的主角' },
+            { id: 'waves', label: '波浪', tip: '寻找起伏的线条或水纹' },
+            { id: 'mottled', label: '斑驳', tip: '记录旧墙、树影或光留下的斑驳' },
+            { id: 'repetition', label: '重复', tip: '拍一组反复出现的形状' },
+            { id: 'chaos', label: '无序', tip: '在看似杂乱的画面里找到美' },
+            { id: 'solid', label: '纯色', tip: '找一整片干净的颜色' }
+          ]
+        },
+        people: {
+          name: '旅途中的人', intro: '看见旅途中人与人的故事', cards: [
+            { id: 'couple', label: '情侣', tip: '记录两个人之间的默契' },
+            { id: 'friends', label: '朋友', tip: '捕捉朋友一起出游的瞬间' },
+            { id: 'family', label: '亲子', tip: '留意大人与孩子的互动' },
+            { id: 'solo', label: '单人', tip: '拍下一个人与风景相处的画面' }
+          ]
+        },
+        views: {
+          name: '取景方式', intro: '试着换一种方式看见同一个地方', cards: [
+            { id: 'up', label: '抬头', tip: '抬头寻找屋檐、树冠或天空' },
+            { id: 'down', label: '低头', tip: '看看脚边、地面和路上的细节' },
+            { id: 'frame', label: '景框', tip: '透过门窗或其他边框看风景' },
+            { id: 'reflection', label: '倒影', tip: '寻找水面、玻璃或镜里的另一个世界' },
+            { id: 'light', label: '光影', tip: '让光与影成为照片的主角' },
+            { id: 'detail', label: '细节', tip: '靠近一点，拍下容易错过的小美好' },
+            { id: 'distance', label: '远景', tip: '退后几步，记录眼前开阔的景色' },
+            { id: 'candid', label: '抓拍', tip: '捕捉旅途中自然发生的一刻' }
+          ]
+        },
+        shapes: {
+          name: '形状', intro: '在旅途中收集八种形状', cards: [
+            { id: 'circle', label: '圆形', tip: '寻找一处完整的圆' },
+            { id: 'square', label: '方形', tip: '留意窗格、地砖或方方的物件' },
+            { id: 'triangle', label: '三角形', tip: '看看屋顶、路牌或山峰' },
+            { id: 'diamond', label: '菱形', tip: '寻找倾斜的方形轮廓' },
+            { id: 'arch', label: '拱形', tip: '发现桥洞、门廊或拱起的线条' },
+            { id: 'heart', label: '心形', tip: '留意自然或人为留下的爱心' },
+            { id: 'star', label: '星形', tip: '寻找装饰或招牌中的星星' },
+            { id: 'spiral', label: '螺旋', tip: '寻找盘旋向内的形状' }
+          ]
+        },
+        numbers: {
+          name: '数字', intro: '收集旅途中出现的数字 1 到 8',
+          cards: Array.from({ length: 8 }, (_, index) => ({
+            id: String(index + 1), label: String(index + 1),
+            tip: '在门牌、车次或票据中找到数字 ' + (index + 1)
+          }))
+        }
+      };
+
+      const STORAGE_KEY = 'travel-photo-draw-v1';
+      const LEGACY_KEY = 'color-draw-selected-v2';
+      const themeIds = Object.keys(THEMES);
       const $ = (id) => document.getElementById(id);
       const ui = {
-        app: $('app'), counter: $('counter'), caption: $('caption'), colorChar: $('colorChar'),
-        resultName: $('resultName'), colorCode: $('colorCode'), draw: $('drawButton'),
-        reset: $('resetButton'), chips: $('chips'), historyCount: $('historyCount')
+        app: $('app'), themeGrid: $('themeGrid'), counter: $('counter'),
+        caption: $('caption'), art: $('cardArt'), resultName: $('resultName'),
+        cardNote: $('cardNote'), draw: $('drawButton'), reset: $('resetButton'),
+        chips: $('chips'), historyCount: $('historyCount'), historyTitle: $('historyTitle')
       };
 
-      const getSaved = () => {
-        try {
-          const value = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-          const valid = COLORS.map((color) => color.id);
-          return Array.isArray(value)
-            ? value.filter((id, index) => valid.includes(id) && value.indexOf(id) === index)
-            : [];
-        } catch { return []; }
+      const validDraws = (themeId, values) => {
+        if (!Array.isArray(values)) return [];
+        const allowed = new Set(THEMES[themeId].cards.map((card) => card.id));
+        return values.filter((id, index) => allowed.has(id) && values.indexOf(id) === index);
       };
 
-      let selectedIds = getSaved();
+      const loadSaved = () => {
+        let stored = null;
+        try { stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null'); } catch {}
+        const draws = {};
+        themeIds.forEach((id) => { draws[id] = validDraws(id, stored?.draws?.[id]); });
+        if (!stored) {
+          try {
+            draws.colors = validDraws('colors', JSON.parse(localStorage.getItem(LEGACY_KEY) || '[]'));
+          } catch {}
+        }
+        return { active: themeIds.includes(stored?.active) ? stored.active : 'colors', draws };
+      };
 
+      let state = loadSaved();
       const save = () => {
-        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(selectedIds)); } catch {}
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
       };
 
       const randomIndex = (length) => {
@@ -344,55 +489,135 @@
         return Math.floor(Math.random() * length);
       };
 
+      const svg = (body) =>
+        '<svg class="symbol-svg" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">' + body + '</svg>';
+
+      const artFor = (themeId, card) => {
+        if (themeId === 'colors') {
+          const ink = card.light ? '#20232A' : '#FFFFFF';
+          return svg('<circle cx="60" cy="60" r="45"/><circle cx="60" cy="60" r="36" fill="' + card.hex + '"/><text x="60" y="75" text-anchor="middle" font-size="39" font-weight="700" font-family="sans-serif" stroke="none" fill="' + ink + '">' + card.name + '</text>');
+        }
+        if (themeId === 'numbers') {
+          return svg('<path d="M27 25h18M75 95h18"/><text x="60" y="85" text-anchor="middle" font-size="72" font-weight="700" font-family="sans-serif" stroke="none" fill="currentColor">' + card.label + '</text>');
+        }
+        const patterns = {
+          grid: '<path d="M24 24v72M48 24v72M72 24v72M96 24v72M24 24h72M24 48h72M24 72h72M24 96h72"/>',
+          dots: '<circle cx="32" cy="34" r="5" fill="currentColor"/><circle cx="60" cy="34" r="5" fill="currentColor"/><circle cx="88" cy="34" r="5" fill="currentColor"/><circle cx="32" cy="62" r="5" fill="currentColor"/><circle cx="60" cy="62" r="5" fill="currentColor"/><circle cx="88" cy="62" r="5" fill="currentColor"/><circle cx="32" cy="90" r="5" fill="currentColor"/><circle cx="60" cy="90" r="5" fill="currentColor"/><circle cx="88" cy="90" r="5" fill="currentColor"/>',
+          stripes: '<path d="M22 84 52 24M38 96 74 24M60 96 96 24M84 96 100 64"/>',
+          waves: '<path d="M18 36c14-20 28 20 42 0s28 20 42 0M18 60c14-20 28 20 42 0s28 20 42 0M18 84c14-20 28 20 42 0s28 20 42 0"/>',
+          mottled: '<path d="M24 31c8-11 19-7 23 2s-4 18-17 16-13-10-6-18ZM69 22c8-4 15 0 17 7s-4 15-13 13-14-14-4-20ZM48 66c12-12 28-6 30 7s-12 28-26 19-16-17-4-26Z"/><circle cx="91" cy="79" r="4" fill="currentColor"/><circle cx="23" cy="77" r="3" fill="currentColor"/>',
+          repetition: '<path d="m28 30 12 20H16Zm36 0 12 20H52Zm36 0 12 20H88ZM28 69l12 20H16Zm36 0 12 20H52Zm36 0 12 20H88Z"/>',
+          chaos: '<path d="m18 30 29 18-12 24 35-41 10 51 22-30M26 91 58 25M93 25 52 96"/><circle cx="24" cy="60" r="4" fill="currentColor"/><circle cx="90" cy="90" r="4" fill="currentColor"/>',
+          solid: '<rect x="25" y="25" width="70" height="70" rx="5" fill="currentColor" stroke="none"/>'
+        };
+        const people = {
+          couple: '<circle cx="43" cy="38" r="11"/><circle cx="77" cy="38" r="11"/><path d="M27 91V72c0-13 7-20 16-20s16 7 16 20v19M61 91V72c0-13 7-20 16-20s16 7 16 20v19M59 74h2"/>',
+          friends: '<circle cx="30" cy="40" r="9"/><circle cx="60" cy="34" r="10"/><circle cx="90" cy="40" r="9"/><path d="M15 86V68c0-9 6-15 15-15 6 0 10 3 13 8M44 86V63c0-10 6-16 16-16s16 6 16 16v23M77 61c3-5 7-8 13-8 9 0 15 6 15 15v18"/>',
+          family: '<circle cx="43" cy="36" r="12"/><circle cx="81" cy="56" r="8"/><path d="M23 96V70c0-14 8-22 20-22s20 8 20 22v26M69 96V79c0-8 5-13 12-13s12 5 12 13v17M63 79h6"/>',
+          solo: '<circle cx="60" cy="39" r="13"/><path d="M35 96V77c0-16 9-26 25-26s25 10 25 26v19M24 99h72"/>'
+        };
+        const views = {
+          up: '<path d="M60 92V29m-18 18 18-18 18 18M22 96h76M26 76l17-11 17 11 17-11 17 11"/>',
+          down: '<path d="M60 25v63m-18-18 18 18 18-18M22 98h76M29 36l16 10 15-10 15 10 16-10"/>',
+          frame: '<path d="M23 48V23h25M72 23h25v25M97 72v25H72M48 97H23V72"/><path d="m31 80 21-24 13 13 13-17 14 28Z"/>',
+          reflection: '<path d="M18 59h84M32 49l25-25 31 25M40 69l17 27 24-27M24 77h7M90 77h7M20 91h9M92 91h9"/>',
+          light: '<circle cx="55" cy="55" r="19"/><path d="M55 17v13M55 80v14M17 55h13M80 55h15M28 28l9 9M73 73l10 10M83 28l-9 9M37 73l-9 9M77 89l16 7"/>',
+          detail: '<circle cx="53" cy="51" r="27"/><path d="m72 72 24 24M43 54c3-8 12-11 20-7M43 64h18"/>',
+          distance: '<path d="M17 92h86M21 78l27-34 18 20 15-13 21 27M18 57l15-15 15 15M70 35h29M79 26v18"/>',
+          candid: '<circle cx="63" cy="34" r="9"/><path d="m62 44-10 20 14 9-9 25m-5-34-22 13m36-4 20-1 12 19M22 53h16M18 65h15"/>'
+        };
+        const shapes = {
+          circle: '<circle cx="60" cy="60" r="35"/>',
+          square: '<rect x="28" y="28" width="64" height="64" rx="2"/>',
+          triangle: '<path d="m60 23 39 72H21Z"/>',
+          diamond: '<path d="m60 20 41 40-41 40-41-40Z"/>',
+          arch: '<path d="M27 96V58a33 33 0 0 1 66 0v38Z"/>',
+          heart: '<path d="M60 95 27 63C8 44 28 20 49 35l11 11 11-11c21-15 41 9 22 28Z"/>',
+          star: '<path d="m60 19 12 27 30 4-22 20 6 30-26-15-26 15 6-30-22-20 30-4Z"/>',
+          spiral: '<path d="M62 59c-5-9-18-5-17 5 1 13 20 16 29 6 13-15 1-35-18-37-24-3-43 19-38 42 5 27 39 41 64 26 28-18 27-56 3-75"/>'
+        };
+        const groups = { patterns, people, views, shapes };
+        return svg(groups[themeId]?.[card.id] || '<circle cx="60" cy="60" r="30"/>');
+      };
+
       const setTheme = (color) => {
         const light = !color || color.light;
         const bg = color?.hex || '#F4F0E8';
         const ink = light ? '#20232A' : '#FFFFFF';
         const muted = light ? '#6D6B67' : 'rgba(255,255,255,.76)';
         const line = light ? 'rgba(32,35,42,.18)' : 'rgba(255,255,255,.38)';
-        document.documentElement.style.setProperty('--bg', bg);
-        document.documentElement.style.setProperty('--ink', ink);
-        document.documentElement.style.setProperty('--muted', muted);
-        document.documentElement.style.setProperty('--line', line);
-        document.documentElement.style.setProperty('--button-bg', light ? '#20232A' : '#FFFFFF');
-        document.documentElement.style.setProperty('--button-ink', light ? '#FFFFFF' : '#20232A');
+        const root = document.documentElement.style;
+        root.setProperty('--bg', bg);
+        root.setProperty('--ink', ink);
+        root.setProperty('--muted', muted);
+        root.setProperty('--line', line);
+        root.setProperty('--surface', color ? 'rgba(255,255,255,.17)' : 'rgba(255,255,255,.38)');
+        root.setProperty('--button-bg', light ? '#20232A' : '#FFFFFF');
+        root.setProperty('--button-ink', light ? '#FFFFFF' : '#20232A');
         document.querySelector('meta[name="theme-color"]').content = bg;
       };
 
-      const render = (animate = false) => {
-        const selected = selectedIds.map((id) => COLORS.find((color) => color.id === id));
-        const current = selected.at(-1) || null;
-        const finished = selected.length === COLORS.length;
-        const remaining = COLORS.length - selected.length;
+      const renderThemes = () => {
+        ui.themeGrid.replaceChildren();
+        themeIds.forEach((id) => {
+          const theme = THEMES[id];
+          const button = document.createElement('button');
+          const progress = state.draws[id].length + ' / ' + theme.cards.length;
+          button.type = 'button';
+          button.className = 'theme-option';
+          button.dataset.theme = id;
+          button.setAttribute('aria-pressed', String(state.active === id));
+          button.setAttribute('aria-label', theme.name + '，已抽 ' + progress);
+          button.innerHTML = '<span class="theme-icon" aria-hidden="true">' +
+            artFor(id, theme.cards[0]) + '</span><span class="theme-copy"><span class="theme-name">' +
+            theme.name + '</span><span class="theme-progress">' + progress + '</span></span>';
+          ui.themeGrid.append(button);
+        });
+      };
 
-        setTheme(current);
-        ui.counter.textContent = `剩余 ${remaining} / ${COLORS.length}`;
-        ui.historyCount.textContent = `${selected.length} / ${COLORS.length}`;
-        ui.colorChar.textContent = current?.name || '?';
-        ui.resultName.textContent = current?.label || '下一种，会是什么颜色？';
-        ui.colorCode.innerHTML = current ? current.hex : '&nbsp;';
-        ui.caption.textContent = finished ? '13种颜色已全部抽完' : current ? '这一次抽到' : '13种颜色 · 每种只会出现一次';
-        ui.draw.textContent = finished ? '重新开始' : current ? '继续抽取' : '开始抽取';
+      const render = (animate = false) => {
+        const theme = THEMES[state.active];
+        const selected = state.draws[state.active].map((id) => theme.cards.find((card) => card.id === id));
+        const current = selected.at(-1) || null;
+        const finished = selected.length === theme.cards.length;
+        const remaining = theme.cards.length - selected.length;
+
+        setTheme(state.active === 'colors' ? current : null);
+        renderThemes();
+        ui.counter.textContent = '剩余 ' + remaining + ' / ' + theme.cards.length;
+        ui.historyTitle.textContent = theme.name + ' · 抽取记录';
+        ui.historyCount.textContent = selected.length + ' / ' + theme.cards.length;
+        ui.art.innerHTML = current ? artFor(state.active, current) : '<span class="placeholder">?</span>';
+        ui.resultName.textContent = current?.label || '下一张，会是什么？';
+        ui.cardNote.textContent = current
+          ? (state.active === 'colors' ? current.hex + ' · 去找一处' + current.label + '的风景' : current.tip)
+          : '带着一张卡，去发现旅途中的美';
+        ui.caption.textContent = finished ? theme.name + '已全部抽完' : current ? '这一次抽到 · ' + theme.name : theme.intro;
+        ui.draw.textContent = finished ? '重新开始本主题' : current ? '继续抽取' : '开始抽取';
         ui.reset.classList.toggle('visible', Boolean(current) && !finished);
 
         ui.chips.replaceChildren();
         if (!selected.length) {
           const note = document.createElement('p');
           note.className = 'empty-note';
-          note.textContent = '抽到的颜色会依次出现在这里';
+          note.textContent = '抽到的卡会依次出现在这里';
           ui.chips.append(note);
         } else {
-          selected.forEach((color) => {
+          selected.forEach((card) => {
             const chip = document.createElement('span');
             chip.className = 'chip';
-            const dot = document.createElement('span');
-            dot.className = 'dot';
-            dot.style.backgroundColor = color.hex;
-            chip.append(dot, document.createTextNode(color.name));
+            const icon = document.createElement('span');
+            if (state.active === 'colors') {
+              icon.className = 'dot';
+              icon.style.backgroundColor = card.hex;
+            } else {
+              icon.className = 'chip-symbol';
+              icon.innerHTML = artFor(state.active, card);
+            }
+            chip.append(icon, document.createTextNode(card.label));
             ui.chips.append(chip);
           });
         }
-
         if (animate) {
           ui.app.classList.remove('pop');
           requestAnimationFrame(() => ui.app.classList.add('pop'));
@@ -400,24 +625,37 @@
         }
       };
 
+      const selectTheme = (id) => {
+        if (!THEMES[id] || state.active === id) return;
+        state.active = id;
+        save();
+        render();
+      };
+
+      const reset = (id = state.active) => {
+        if (!THEMES[id]) return;
+        state.draws[id] = [];
+        save();
+        render();
+      };
+
       const draw = () => {
-        const remaining = COLORS.filter((color) => !selectedIds.includes(color.id));
-        if (!remaining.length) return reset();
+        const theme = THEMES[state.active];
+        const remaining = theme.cards.filter((card) => !state.draws[state.active].includes(card.id));
+        if (!remaining.length) { reset(); return null; }
         const picked = remaining[randomIndex(remaining.length)];
-        selectedIds = [...selectedIds, picked.id];
+        state.draws[state.active].push(picked.id);
         save();
         render(true);
         return picked;
       };
 
-      const reset = () => {
-        selectedIds = [];
-        save();
-        render(false);
-      };
-
+      ui.themeGrid.addEventListener('click', (event) => {
+        const button = event.target.closest('.theme-option');
+        if (button) selectTheme(button.dataset.theme);
+      });
       ui.draw.addEventListener('click', draw);
-      ui.reset.addEventListener('click', reset);
+      ui.reset.addEventListener('click', () => reset());
       document.addEventListener('keydown', (event) => {
         if (event.code === 'Space' && event.target === document.body) {
           event.preventDefault();
@@ -428,43 +666,62 @@
       const registerWebMCP = () => {
         const context = document.modelContext;
         if (!context?.registerTool) return;
-        const controller = new AbortController();
-        const common = { signal: controller.signal };
-        try {
-          void Promise.resolve(context.registerTool({
-            name: 'draw_next_color',
-            title: '抽取下一种颜色',
-            description: '从当前还未抽到的颜色中随机抽取一种，并同步更新页面记录。全部抽完时会明确返回完成状态。',
-            inputSchema: { type: 'object', properties: {}, additionalProperties: false },
-            annotations: { readOnlyHint: false, untrustedContentHint: false },
-            execute(input) {
-              if (!input || typeof input !== 'object' || Array.isArray(input) || Object.keys(input).length) {
-                throw new TypeError('输入必须是空对象');
-              }
-              const remainingBefore = COLORS.length - selectedIds.length;
-              if (!remainingBefore) return { status: 'completed', remaining: 0 };
-              const picked = draw();
-              return { status: 'drawn', color: picked.label, hex: picked.hex, remaining: remainingBefore - 1 };
+        const common = { signal: new AbortController().signal };
+        const empty = (input) => {
+          if (!input || typeof input !== 'object' || Array.isArray(input) || Object.keys(input).length) {
+            throw new TypeError('输入必须是空对象');
+          }
+        };
+        const register = (config) => {
+          try { void Promise.resolve(context.registerTool(config, common)).catch(() => {}); } catch {}
+        };
+        register({
+          name: 'draw_next_photo_card', title: '抽取当前主题的下一张卡',
+          description: '从当前主题未抽取的卡中随机抽取一张，所有主题分别记录进度。',
+          inputSchema: { type: 'object', properties: {}, additionalProperties: false },
+          annotations: { readOnlyHint: false, untrustedContentHint: false },
+          execute(input) {
+            empty(input);
+            const themeId = state.active;
+            if (state.draws[themeId].length === THEMES[themeId].cards.length) {
+              return { status: 'completed', theme: THEMES[themeId].name, remaining: 0 };
             }
-          }, common)).catch(() => {});
-          void Promise.resolve(context.registerTool({
-            name: 'reset_color_draw',
-            title: '重新开始抽颜色',
-            description: '清空当前一轮已经抽到的颜色，恢复全部13种颜色。',
-            inputSchema: { type: 'object', properties: {}, additionalProperties: false },
-            annotations: { readOnlyHint: false, untrustedContentHint: false },
-            execute(input) {
-              if (!input || typeof input !== 'object' || Array.isArray(input) || Object.keys(input).length) {
-                throw new TypeError('输入必须是空对象');
-              }
-              reset();
-              return { status: 'reset', remaining: COLORS.length };
-            }
-          }, common)).catch(() => {});
-        } catch {}
+            const card = draw();
+            return { status: 'drawn', theme: THEMES[themeId].name, card: card.label,
+              remaining: THEMES[themeId].cards.length - state.draws[themeId].length };
+          }
+        });
+        register({
+          name: 'reset_photo_theme', title: '重置当前主题',
+          description: '清空当前主题的抽取记录，不影响其他主题。',
+          inputSchema: { type: 'object', properties: {}, additionalProperties: false },
+          annotations: { readOnlyHint: false, untrustedContentHint: false },
+          execute(input) { empty(input); reset(); return { status: 'reset', theme: THEMES[state.active].name }; }
+        });
+        register({
+          name: 'draw_next_color', title: '抽取下一种颜色',
+          description: '切换到颜色主题并从尚未抽到的颜色中抽取一种。',
+          inputSchema: { type: 'object', properties: {}, additionalProperties: false },
+          annotations: { readOnlyHint: false, untrustedContentHint: false },
+          execute(input) {
+            empty(input);
+            selectTheme('colors');
+            if (state.draws.colors.length === COLORS.length) return { status: 'completed', remaining: 0 };
+            const card = draw();
+            return { status: 'drawn', color: card.label, hex: card.hex,
+              remaining: COLORS.length - state.draws.colors.length };
+          }
+        });
+        register({
+          name: 'reset_color_draw', title: '重置颜色主题',
+          description: '只清空颜色主题的抽取记录。',
+          inputSchema: { type: 'object', properties: {}, additionalProperties: false },
+          annotations: { readOnlyHint: false, untrustedContentHint: false },
+          execute(input) { empty(input); reset('colors'); return { status: 'reset', remaining: COLORS.length }; }
+        });
       };
 
-      render(false);
+      render();
       registerWebMCP();
     })();
   </script>
