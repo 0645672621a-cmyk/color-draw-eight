@@ -337,7 +337,7 @@
         <p class="eyebrow">PHOTO PROMPT · 06 THEMES</p>
         <h1>旅行观察抽卡</h1>
       </div>
-      <div class="counter" id="counter" aria-live="polite">剩余 13 / 13</div>
+      <div class="counter" id="counter" aria-live="polite">剩余 14 / 14</div>
     </header>
 
     <section class="theme-picker" aria-labelledby="pickerTitle">
@@ -361,7 +361,7 @@
     <section class="history" aria-labelledby="historyTitle">
       <div class="history-head">
         <span id="historyTitle">颜色 · 抽取记录</span>
-        <span class="history-count" id="historyCount">0 / 13</span>
+        <span class="history-count" id="historyCount">0 / 14</span>
       </div>
       <div class="chips" id="chips">
         <p class="empty-note">抽到的颜色会依次出现在这里</p>
@@ -376,7 +376,8 @@
         { id: 'orange', label: '橙色', name: '橙', hex: '#FF9F43', light: true },
         { id: 'yellow', label: '黄色', name: '黄', hex: '#FFD84A', light: true },
         { id: 'green', label: '绿色', name: '绿', hex: '#36A779', light: false },
-        { id: 'blue', label: '蓝色', name: '蓝', hex: '#3478DE', light: false },
+        { id: 'dark-blue', label: '深蓝色', name: '深', hex: '#153B78', light: false },
+        { id: 'light-blue', label: '浅蓝色', name: '浅', hex: '#78CDF0', light: true },
         { id: 'purple', label: '紫色', name: '紫', hex: '#8056C9', light: false },
         { id: 'black', label: '黑色', name: '黑', hex: '#20232A', light: false },
         { id: 'white', label: '白色', name: '白', hex: '#FFFFFF', light: true },
@@ -384,12 +385,12 @@
         { id: 'brown', label: '棕色', name: '棕', hex: '#795037', light: false },
         { id: 'gold', label: '金色', name: '金', hex: '#C49A32', light: true },
         { id: 'silver', label: '银色', name: '银', hex: '#A8B4C2', light: true },
-        { id: 'skin', label: '肉色', name: '肉', hex: '#DDB69A', light: true }
+        { id: 'gray', label: '灰色', name: '灰', hex: '#62676F', light: false }
       ];
 
       const THEMES = {
         colors: {
-          name: '颜色', intro: '13种颜色 · 每张卡只出现一次', cards: COLORS
+          name: '颜色', intro: '14种颜色 · 每张卡只出现一次', cards: COLORS
         },
         patterns: {
           name: '画面图案', intro: '在街头和自然里寻找有趣的图案', cards: [
@@ -458,7 +459,10 @@
       const validDraws = (themeId, values) => {
         if (!Array.isArray(values)) return [];
         const allowed = new Set(THEMES[themeId].cards.map((card) => card.id));
-        return values.filter((id, index) => allowed.has(id) && values.indexOf(id) === index);
+        const migrated = themeId === 'colors'
+          ? values.map((id) => id === 'blue' ? 'dark-blue' : id)
+          : values;
+        return migrated.filter((id, index) => allowed.has(id) && migrated.indexOf(id) === index);
       };
 
       const loadSaved = () => {
